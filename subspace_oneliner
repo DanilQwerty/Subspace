@@ -37,6 +37,6 @@ sudo systemctl daemon-reload && \
 sudo systemctl enable subspaced && \
 sudo systemctl restart subspaced
 
-sudo journalctl -fu subspaced --no-hostname -o cat
-
 rm -f $HOME/subspace_oneliner
+
+sudo journalctl -fu subspaced --no-hostname -o cat
