@@ -1,0 +1,42 @@
+#!/bin/bash
+sudo apt-get update && sudo apt-get upgrade -y
+
+sudo apt-get install wget jq ocl-icd-opencl-dev \
+libopencl-clang-dev libgomp1 ocl-icd-libopencl1 -y
+
+mkdir $HOME/subspace && cd $HOME/subspace
+
+wget https://github.com/subspace/subspace-cli/releases/download/v0.1.9-alpha/subspace-cli-Ubuntu-x86_64-v0.1.9-alpha
+
+chmod +x subspace-cli-Ubuntu-x86_64-v0.1.9-alpha
+
+./subspace-cli-Ubuntu-x86_64-v0.1.9-alpha init
+
+sudo tee <<EOF >/dev/null /etc/systemd/journald.conf
+Storage=persistent
+EOF
+
+sudo systemctl restart systemd-journald
+
+sudo tee <<EOF >/dev/null /etc/systemd/system/subspaced.service
+[Unit]
+Description=Subspace Node
+After=network.target
+[Service]
+Type=simple
+User=$USER
+ExecStart=$(which subspace) farm -v
+Restart=always
+RestartSec=10
+LimitNOFILE=1024000
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload && \
+sudo systemctl enable subspaced && \
+sudo systemctl restart subspaced
+
+sudo journalctl -fu subspaced --no-hostname -o cat
+
+rm -f $HOME/subspace_oneliner
